@@ -193,16 +193,8 @@ const App = () => {
     return (
         // Main container with Tailwind CSS for responsive design and overall styling
         <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 font-inter">
-            {/* Link to Inter font from Google Fonts for consistent typography */}
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-            <style>
-                {/* Basic CSS to apply the Inter font to the body */}
-                {`
-                body {
-                    font-family: 'Inter', sans-serif;
-                }
-                `}
-            </style>
+            {/* NO NECESITAS LAS ETIQUETAS <link> y <style> AQUÍ. ESTÁN EN PUBLIC/INDEX.HTML AHORA. */}
+            {/* El Tailwind CSS CDN y la fuente Inter se cargan en public/index.html */}
 
             {/* Main content card with shadow and rounded corners */}
             <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl flex flex-col items-center">
@@ -298,14 +290,14 @@ const App = () => {
                             <div className="mb-6 flex flex-col items-center">
                                 <h3 className="text-xl font-medium text-gray-700 mb-2">Image:</h3>
                                 <div className="relative">
+                                    {/* Ruta de la imagen del logo - Asegúrate que el nombre del archivo sea exacto y esté en la carpeta public */}
                                     <img
                                         src={generatedImage}
                                         alt="Generated Instagram Content"
                                         className="w-full h-auto rounded-lg shadow-md max-w-md mx-auto block"
                                     />
-                                    {/* User's profile logo as a visual overlay/watermark reminder */}
                                     <img
-                                        src="Screenshot 2025-06-25 at 12.20.19 PM.png" // User's provided logo file
+                                        src="/Screenshot 2025-06-25 at 12.20.19 PM.png" // Ruta corregida: usa / para la raíz de public
                                         alt="EbayCoolFinds Logo Profile"
                                         className="absolute bottom-2 right-2 w-16 h-16 object-contain rounded-full border-2 border-white shadow-lg"
                                         onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/64x64/cccccc/ffffff?text=Logo"; }} // Fallback image if the actual logo isn't found
