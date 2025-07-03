@@ -1,18 +1,18 @@
-import React, { useState, useCallback, useMemo } from 'react'; // Ensure useMemo is imported here
+import React, { useState, useCallback, useMemo } from 'react'; // Asegúrate de que useMemo esté importado aquí
 
-// Main App component
+// Componente principal de la aplicación
 const App = () => {
-    // State variables for managing the application's data and UI
-    const [selectedPillar, setSelectedPillar] = useState(''); // Stores the currently selected content pillar
-    const [generatedImage, setGeneratedImage] = useState(''); // Stores the URL of the generated image
-    const [generatedText, setGeneratedText] = useState(''); // Stores the generated Instagram caption
-    const [isLoading, setIsLoading] = useState(false); // Indicates if content is currently being generated
-    const [error, setError] = useState(''); // Stores any error messages
-    const [telegramStatus, setTelegramStatus] = useState(''); // Status message for Telegram send
+    // Variables de estado para gestionar los datos y la interfaz de usuario de la aplicación
+    const [selectedPillar, setSelectedPillar] = useState(''); // Almacena el pilar de contenido seleccionado actualmente
+    const [generatedImage, setGeneratedImage] = useState(''); // Almacena la URL de la imagen generada
+    const [generatedText, setGeneratedText] = useState(''); // Almacena el pie de foto de Instagram generado
+    const [isLoading, setIsLoading] = useState(false); // Indica si el contenido se está generando actualmente
+    const [error, setError] = useState(''); // Almacena cualquier mensaje de error
+    const [telegramStatus, setTelegramStatus] = useState(''); // Mensaje de estado para el envío a Telegram
 
-    // Define the content pillars with their IDs, display names, and base prompts for image generation
-    // This array is wrapped in useMemo to prevent it from being recreated on every render,
-    // which was causing the ESLint/build error in Cloudflare Pages.
+    // Define los pilares de contenido con sus IDs, nombres de visualización y prompts base para la generación de imágenes
+    // Este array se envuelve en useMemo para evitar que se recree en cada renderizado,
+    // lo que causaba el error de ESLint/build en Cloudflare Pages.
     const contentPillars = useMemo(() => [
         { id: 'discovery', name: 'The Thrill of Discovery', prompt: 'A person experiencing surprise and wonder, looking at something amazing just out of frame, with a bright, curious expression. Focus on the emotion of discovery and a sense of awe. Realistic photo.' },
         { id: 'lifestyle', name: 'The Online Treasure Hunter Lifestyle', prompt: 'A person with a thoughtful and satisfied expression, holding a unique, non-descript vintage item. The setting suggests a cozy, curated space, like a home office or a reading nook. Focus on the lifestyle and joy of finding unique items. Realistic photo.' },
@@ -22,25 +22,25 @@ const App = () => {
         { id: 'gifting', name: 'The Joy of Gifting', prompt: 'Hands exchanging a beautifully wrapped, non-descript gift package, with both people smiling warmly. Focus on the happiness of giving and receiving a special item. Realistic photo.' },
         { id: 'aha_moment', name: 'The "Aha!" Moment', prompt: 'A person with a sudden look of inspiration, a lightbulb moment, while browsing on a tablet or computer. Focus on the spark of an idea or solution found online. Realistic photo.' },
         { id: 'sustainable_finds', name: 'Sustainable Finds', prompt: 'Hands carefully examining a pre-loved, unique item, with a soft, appreciative touch. The background suggests a conscious, eco-friendly lifestyle. Focus on sustainability and finding new life for items. Realistic photo.' },
-    ], []); // The empty array [] as a dependency ensures this array is memoized once.
+    ], []); // El array vacío [] como dependencia asegura que este array se memorice una vez.
     
-    // Placeholder for the API key. Canvas will inject the actual key at runtime.
-    const apiKey = "";
+    // La clave API se lee ahora de la variable global 'window' inyectada en index.html
+    const apiKey = window.REACT_APP_GEMINI_API_KEY;
 
-    // Function to handle content generation (image and text)
-    // isRandom parameter determines if a random pillar should be selected
+    // Función para manejar la generación de contenido (imagen y texto)
+    // El parámetro isRandom determina si se debe seleccionar un pilar aleatorio.
     const handleGenerateContent = useCallback(async (isRandom = false) => {
-        setError(''); // Clear previous errors
-        setGeneratedImage(''); // Clear previous image
-        setGeneratedText(''); // Clear previous text
-        setTelegramStatus(''); // Clear previous Telegram status
+        setError(''); // Limpia errores anteriores
+        setGeneratedImage(''); // Limpia imagen anterior
+        setGeneratedText(''); // Limpia texto anterior
+        setTelegramStatus(''); // Limpia estado anterior de Telegram
 
         let pillarToGenerate = selectedPillar;
         if (isRandom) {
-            // Select a random pillar if the random button was clicked
+            // Selecciona un pilar aleatorio si se hizo clic en el botón aleatorio
             const randomIndex = Math.floor(Math.random() * contentPillars.length);
             pillarToGenerate = contentPillars[randomIndex].id;
-            setSelectedPillar(pillarToGenerate); // Update the dropdown to show the selected random pillar
+            setSelectedPillar(pillarToGenerate); // Actualiza el menú desplegable para mostrar el pilar aleatorio seleccionado
         }
 
         if (!pillarToGenerate) {
@@ -48,25 +48,25 @@ const App = () => {
             return;
         }
 
-        setIsLoading(true); // Set loading state to true
+        setIsLoading(true); // Establece el estado de carga a verdadero
 
         try {
-            // Find the selected pillar's data
+            // Encuentra los datos del pilar seleccionado
             const pillar = contentPillars.find(p => p.id === pillarToGenerate);
             if (!pillar) {
                 throw new Error('Content pillar not found.');
             }
 
-            // --- Step 1: Generate Image using Imagen 3.0 ---
-            // Payload for the image generation API call
+            // --- Paso 1: Generar Imagen usando Imagen 3.0 ---
+            // Payload para la llamada a la API de generación de imágenes
             const imagePayload = {
-                instances: { prompt: pillar.prompt }, // Use the pillar's prompt for image generation
-                parameters: { "sampleCount": 1 } // Ensure only one image is generated
+                instances: { prompt: pillar.prompt }, // Usa el prompt del pilar para la generación de imágenes
+                parameters: { "sampleCount": 1 } // Asegura que solo se genere una imagen
             };
-            // API URL for Imagen 3.0
+            // URL de la API para Imagen 3.0
             const imageApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
 
-            // Fetch request to the image generation API
+            // Solicitud fetch a la API de generación de imágenes
             const imageResponse = await fetch(imageApiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -76,25 +76,25 @@ const App = () => {
             const imageResult = await imageResponse.json();
 
             let imageUrl = '';
-            // Check if image generation was successful and extract the base64 image data
+            // Verifica si la generación de imágenes fue exitosa y extrae los datos de la imagen en base64
             if (imageResult.predictions && imageResult.predictions.length > 0 && imageResult.predictions[0].bytesBase64Encoded) {
                 imageUrl = `data:image/png;base64,${imageResult.predictions[0].bytesBase64Encoded}`;
-                setGeneratedImage(imageUrl); // Update state with the generated image URL
+                setGeneratedImage(imageUrl); // Actualiza el estado con la URL de la imagen generada
             } else {
                 throw new Error('Failed to generate image. Please try again.');
             }
 
-            // --- Step 2: Generate Text Caption using Gemini 2.0 Flash ---
-            // Construct a detailed prompt for the text generation based on the pillar name
-            // The prompt explicitly asks for only the caption text without introductory phrases.
+            // --- Paso 2: Generar pie de foto de texto usando Gemini 2.0 Flash ---
+            // Construye un prompt detallado para la generación de texto basado en el nombre del pilar
+            // El prompt pide explícitamente solo el texto del pie de foto sin frases introductorias.
             const textPrompt = `Write an engaging Instagram caption in English for an image representing "${pillar.name}". The caption should encourage interaction and include 5-7 relevant hashtags for an account named @EbayCoolFinds, focusing on online shopping, unique finds, and the joy of discovery. The tone should be enthusiastic and friendly. Provide only the caption text, without any introductory phrases or comments.`;
 
             const textChatHistory = [{ role: "user", parts: [{ text: textPrompt }] }];
             const textPayload = { contents: textChatHistory };
-            // API URL for Gemini 2.0 Flash
+            // URL de la API para Gemini 2.0 Flash
             const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-            // Fetch request to the text generation API
+            // Solicitud fetch a la API de generación de texto
             const textResponse = await fetch(textApiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -104,10 +104,10 @@ const App = () => {
             const textResult = await textResponse.json();
 
             let generatedCaption = '';
-            // Check if text generation was successful and extract the text
+            // Verifica si la generación de texto fue exitosa y extrae el texto
             if (textResult.candidates && textResult.candidates.length > 0 && textResult.candidates[0].content && textResult.candidates[0].content.parts && textResult.candidates[0].content.parts.length > 0) {
                 generatedCaption = textResult.candidates[0].content.parts[0].text;
-                setGeneratedText(generatedCaption); // Update state with the generated text
+                setGeneratedText(generatedCaption); // Actualiza el estado con el texto generado
             } else {
                 throw new Error('Failed to generate text. Please try again.');
             }
@@ -116,11 +116,11 @@ const App = () => {
             console.error("Error generating content:", err);
             setError(`Error: ${err.message || 'An unexpected error occurred.'}`);
         } finally {
-            setIsLoading(false); // Reset loading state
+            setIsLoading(false); // Restablece el estado de carga
         }
-    }, [selectedPillar, contentPillars]); // Dependencies for useCallback
+    }, [selectedPillar, contentPillars, apiKey]); // Dependencias para useCallback
 
-    // Function to send content to Telegram Bot via a Cloudflare Worker
+    // Función para enviar contenido al Bot de Telegram a través de un Cloudflare Worker
     const sendToTelegram = useCallback(async () => {
         if (!generatedImage || !generatedText) {
             setTelegramStatus('Please generate content first.');
@@ -128,17 +128,17 @@ const App = () => {
         }
 
         setTelegramStatus('Sending to Telegram...');
-        // IMPORTANT: Replace this with your actual Cloudflare Worker URL
-        // This URL will point to the Cloudflare Worker you will deploy separately.
-        const workerUrl = 'YOUR_CLOUDFLARE_TELEGRAM_WORKER_URL_HERE'; // *** REPLACE THIS URL ***
+        // IMPORTANTE: Reemplaza esto con la URL real de tu Cloudflare Worker
+        // Esta URL apuntará al Cloudflare Worker que desplegarás por separado.
+        const workerUrl = 'YOUR_CLOUDFLARE_TELEGRAM_WORKER_URL_HERE'; // *** REEMPLAZA ESTA URL ***
 
         try {
             const response = await fetch(workerUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Send the base64 image data (without the "data:image/png;base64," prefix) and the caption
+                // Envía los datos de la imagen en base64 (sin el prefijo "data:image/png;base64,") y el pie de foto
                 body: JSON.stringify({
-                    image_base64: generatedImage.split(',')[1], // Extract base64 part
+                    image_base64: generatedImage.split(',')[1], // Extrae la parte base64
                     caption: generatedText
                 })
             });
@@ -148,34 +148,34 @@ const App = () => {
             if (response.ok) {
                 setTelegramStatus('Content sent to Telegram successfully!');
             } else {
-                // Display error from the Worker if available, otherwise generic message
+                // Muestra el error del Worker si está disponible, de lo contrario un mensaje genérico
                 setTelegramStatus(`Failed to send to Telegram: ${result.error || 'Unknown error'}`);
                 console.error('Telegram Worker Error:', result);
             }
         } catch (err) {
-            // Catch network errors or issues with the Worker URL
+            // Captura errores de red o problemas con la URL del Worker
             setTelegramStatus(`Error sending to Telegram: ${err.message}`);
             console.error('Network or Worker call error:', err);
         }
-    }, [generatedImage, generatedText]); // Dependencies for useCallback
+    }, [generatedImage, generatedText]); // Dependencias para useCallback
 
-    // Function to share content on other social media using Web Share API
+    // Función para compartir contenido en otras redes sociales usando la Web Share API
     const shareOnSocialMedia = useCallback(() => {
         if (!generatedText) {
             alert('Please generate content first to share.');
             return;
         }
 
-        // Attempt to use Web Share API for sharing text.
-        // Direct sharing of base64 images is often not supported by Web Share API
-        // or by the target social media platforms without a public URL.
+        // Intenta usar la Web Share API para compartir texto.
+        // La compartición directa de imágenes en base64 a menudo no es compatible con la Web Share API
+        // o con las plataformas de redes sociales de destino sin una URL pública.
         if (navigator.share) {
             navigator.share({
                 title: 'EbayCoolFinds Post',
                 text: generatedText,
-                // Files (images) are tricky with Web Share API and base64.
-                // For direct image sharing, user would need to download and upload.
-                // Or if the image was hosted publicly, we could provide its URL here.
+                // Los archivos (imágenes) son complicados con la Web Share API y base64.
+                // Para compartir imágenes directamente, el usuario necesitaría descargar y subir.
+                // O si la imagen estuviera alojada públicamente, podríamos proporcionar su URL aquí.
             }).then(() => {
                 console.log('Content shared successfully');
             }).catch((error) => {
@@ -183,29 +183,29 @@ const App = () => {
                 alert('Failed to share content. You might need to copy text and download image manually for some platforms.');
             });
         } else {
-            // Fallback for browsers that do not support Web Share API
+            // Fallback para navegadores que no son compatibles con la Web Share API
             alert('Your browser does not support direct sharing. Please copy the text and download the image manually to share on social media.');
-            // Optionally, you could provide links to open specific social media share dialogues
-            // e.g., window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(generatedText)}`);
+            // Opcionalmente, podrías proporcionar enlaces para abrir diálogos de compartir de redes sociales específicas
+            // ej., window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(generatedText)}`);
         }
-    }, [generatedText]); // Dependencies for useCallback
+    }, [generatedText]); // Dependencias para useCallback
 
     return (
-        // Main container with Tailwind CSS for responsive design and overall styling
+        // Contenedor principal con Tailwind CSS para diseño responsivo y estilo general
         <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 font-inter">
             {/* NO NECESITAS LAS ETIQUETAS <link> y <style> AQUÍ. ESTÁN EN PUBLIC/INDEX.HTML AHORA. */}
             {/* El Tailwind CSS CDN y la fuente Inter se cargan en public/index.html */}
 
-            {/* Main content card with shadow and rounded corners */}
+            {/* Tarjeta de contenido principal con sombra y esquinas redondeadas */}
             <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl flex flex-col items-center">
-                {/* Application Title */}
+                {/* Título de la aplicación */}
                 <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">Content Generator for @EbayCoolFinds</h1>
-                {/* Application Description */}
+                {/* Descripción de la aplicación */}
                 <p className="text-gray-600 text-center mb-8">
                     Select a content pillar or generate random content for an image and an Instagram caption.
                 </p>
 
-                {/* Dropdown for selecting content pillars */}
+                {/* Menú desplegable para seleccionar pilares de contenido */}
                 <div className="w-full mb-6">
                     <label htmlFor="pillar-select" className="block text-gray-700 text-sm font-semibold mb-2">
                         Select a Content Pillar:
@@ -225,7 +225,7 @@ const App = () => {
                                 </option>
                             ))}
                         </select>
-                        {/* Dropdown arrow icon */}
+                        {/* Icono de flecha del menú desplegable */}
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                             <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
@@ -234,14 +234,14 @@ const App = () => {
                     </div>
                 </div>
 
-                {/* Buttons for content generation (manual and random) */}
+                {/* Botones para la generación de contenido (manual y aleatorio) */}
                 <div className="flex flex-col sm:flex-row w-full gap-4 mb-6">
                     <button
-                        onClick={() => handleGenerateContent(false)} // Manual selection
+                        onClick={() => handleGenerateContent(false)} // Selección manual
                         className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${isLoading || !selectedPillar ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={isLoading || !selectedPillar}
                     >
-                        {isLoading && !selectedPillar ? ( // Show loading spinner if a pillar is selected and loading
+                        {isLoading && !selectedPillar ? ( // Muestra el spinner de carga si se selecciona un pilar y está cargando
                             <div className="flex items-center justify-center">
                                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -254,11 +254,11 @@ const App = () => {
                         )}
                     </button>
                     <button
-                        onClick={() => handleGenerateContent(true)} // Random generation
+                        onClick={() => handleGenerateContent(true)} // Generación aleatoria
                         className={`flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={isLoading}
                     >
-                        {isLoading && selectedPillar === '' ? ( // Show loading spinner if no pillar is selected (implying random)
+                        {isLoading && selectedPillar === '' ? ( // Muestra el spinner de carga si no se selecciona ningún pilar (lo que implica aleatorio)
                             <div className="flex items-center justify-center">
                                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -273,7 +273,7 @@ const App = () => {
                 </div>
 
 
-                {/* Error message display area */}
+                {/* Área de visualización de mensajes de error */}
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mt-6 w-full" role="alert">
                         <strong className="font-bold">Error!</strong>
@@ -281,7 +281,7 @@ const App = () => {
                     </div>
                 )}
 
-                {/* Display area for generated image and text */}
+                {/* Área de visualización de contenido generado */}
                 {(generatedImage || generatedText) && (
                     <div className="mt-8 p-6 bg-gray-50 border border-gray-200 rounded-xl w-full">
                         <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center">Generated Content:</h2>
@@ -297,10 +297,10 @@ const App = () => {
                                         className="w-full h-auto rounded-lg shadow-md max-w-md mx-auto block"
                                     />
                                     <img
-                                        src="/Screenshot 2025-06-25 at 12.20.19 PM.png" // Ruta corregida: usa / para la raíz de public
+                                        src="/ebay-cool-finds-logo.png" // RUTA CORREGIDA DEL LOGO
                                         alt="EbayCoolFinds Logo Profile"
                                         className="absolute bottom-2 right-2 w-16 h-16 object-contain rounded-full border-2 border-white shadow-lg"
-                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/64x64/cccccc/ffffff?text=Logo"; }} // Fallback image if the actual logo isn't found
+                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/64x64/cccccc/ffffff?text=Logo"; }} // Imagen de fallback si el logo real no se encuentra
                                     />
                                 </div>
                                 <p className="text-sm text-gray-500 mt-2 text-center">
@@ -322,7 +322,7 @@ const App = () => {
                                 <div className="bg-white p-4 rounded-lg border border-gray-300 text-gray-800 whitespace-pre-wrap break-words">
                                     {generatedText}
                                 </div>
-                                {/* Button to send content to Telegram Bot via a Cloudflare Worker */}
+                                {/* Botón para enviar contenido al Bot de Telegram a través de un Cloudflare Worker */}
                                 <button
                                     onClick={sendToTelegram}
                                     className={`mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 ${!generatedImage || !generatedText ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -332,7 +332,7 @@ const App = () => {
                                 </button>
                                 {telegramStatus && <p className="text-sm text-center mt-2">{telegramStatus}</p>}
 
-                                {/* Button to share content on other social media platforms */}
+                                {/* Botón para compartir contenido en otras plataformas de redes sociales */}
                                 <button
                                     onClick={shareOnSocialMedia}
                                     className={`mt-4 w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-opacity-50 ${!generatedText ? 'opacity-50 cursor-not-allowed' : ''}`}

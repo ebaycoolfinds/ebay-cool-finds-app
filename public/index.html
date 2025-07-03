@@ -10,14 +10,13 @@
         content="Web app to generate Instagram content for @EbayCoolFinds"
     />
     <title>EbayCoolFinds Content Generator</title>
-
-    <!-- Tailwind CSS CDN - ESTA LÍNEA ES NUEVA Y CRÍTICA -->
+    
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Google Fonts: Inter - MOVIDO AQUÍ DESDE APP.JS -->
+    <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
-        /* Estilo básico para aplicar la fuente Inter al cuerpo - MOVIDO AQUÍ DESDE APP.JS */
         body {
             font-family: 'Inter', sans-serif;
         }
@@ -25,6 +24,12 @@
 </head>
 <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    
+    <!-- Script para inyectar la clave API directamente -->
+    <script>
+        window.REACT_APP_GEMINI_API_KEY = "AIzaSyDINUfLvAmQ58ovey_njLppf7g9za1Wu0o"; // ¡TU CLAVE API INSERTADA AQUÍ!
+    </script>
+
     <div id="root"></div>
     <!--
         This HTML file is a template.
