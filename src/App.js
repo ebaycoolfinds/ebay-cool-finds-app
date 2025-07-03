@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 
 // Main App component
 const App = () => {
@@ -11,7 +11,7 @@ const App = () => {
     const [telegramStatus, setTelegramStatus] = useState(''); // Status message for Telegram send
 
     // Define the content pillars with their IDs, display names, and base prompts for image generation
-    const contentPillars = [
+    const contentPillars = useMemo(() => [ ... ], []);[
         { id: 'discovery', name: 'The Thrill of Discovery', prompt: 'A person experiencing surprise and wonder, looking at something amazing just out of frame, with a bright, curious expression. Focus on the emotion of discovery and a sense of awe. Realistic photo.' },
         { id: 'lifestyle', name: 'The Online Treasure Hunter Lifestyle', prompt: 'A person with a thoughtful and satisfied expression, holding a unique, non-descript vintage item. The setting suggests a cozy, curated space, like a home office or a reading nook. Focus on the lifestyle and joy of finding unique items. Realistic photo.' },
         { id: 'community', name: 'The Smart Shopper Community', prompt: 'Two or three diverse people happily interacting around a tablet or smartphone, sharing a moment of excitement over an online find. They are smiling and engaged. Focus on connection and shared joy. Realistic photo.' },
