@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react'; // Ensure useMemo is imported here
 
 // Main App component
 const App = () => {
@@ -11,7 +11,9 @@ const App = () => {
     const [telegramStatus, setTelegramStatus] = useState(''); // Status message for Telegram send
 
     // Define the content pillars with their IDs, display names, and base prompts for image generation
-    const contentPillars = useMemo(() => [ ... ], []);[
+    // This array is wrapped in useMemo to prevent it from being recreated on every render,
+    // which was causing the ESLint/build error in Cloudflare Pages.
+    const contentPillars = useMemo(() => [
         { id: 'discovery', name: 'The Thrill of Discovery', prompt: 'A person experiencing surprise and wonder, looking at something amazing just out of frame, with a bright, curious expression. Focus on the emotion of discovery and a sense of awe. Realistic photo.' },
         { id: 'lifestyle', name: 'The Online Treasure Hunter Lifestyle', prompt: 'A person with a thoughtful and satisfied expression, holding a unique, non-descript vintage item. The setting suggests a cozy, curated space, like a home office or a reading nook. Focus on the lifestyle and joy of finding unique items. Realistic photo.' },
         { id: 'community', name: 'The Smart Shopper Community', prompt: 'Two or three diverse people happily interacting around a tablet or smartphone, sharing a moment of excitement over an online find. They are smiling and engaged. Focus on connection and shared joy. Realistic photo.' },
@@ -20,12 +22,13 @@ const App = () => {
         { id: 'gifting', name: 'The Joy of Gifting', prompt: 'Hands exchanging a beautifully wrapped, non-descript gift package, with both people smiling warmly. Focus on the happiness of giving and receiving a special item. Realistic photo.' },
         { id: 'aha_moment', name: 'The "Aha!" Moment', prompt: 'A person with a sudden look of inspiration, a lightbulb moment, while browsing on a tablet or computer. Focus on the spark of an idea or solution found online. Realistic photo.' },
         { id: 'sustainable_finds', name: 'Sustainable Finds', prompt: 'Hands carefully examining a pre-loved, unique item, with a soft, appreciative touch. The background suggests a conscious, eco-friendly lifestyle. Focus on sustainability and finding new life for items. Realistic photo.' },
-    ];
-
+    ], []); // The empty array [] as a dependency ensures this array is memoized once.
+    
     // Placeholder for the API key. Canvas will inject the actual key at runtime.
     const apiKey = "";
 
     // Function to handle content generation (image and text)
+    // isRandom parameter determines if a random pillar should be selected
     const handleGenerateContent = useCallback(async (isRandom = false) => {
         setError(''); // Clear previous errors
         setGeneratedImage(''); // Clear previous image
@@ -55,12 +58,15 @@ const App = () => {
             }
 
             // --- Step 1: Generate Image using Imagen 3.0 ---
+            // Payload for the image generation API call
             const imagePayload = {
                 instances: { prompt: pillar.prompt }, // Use the pillar's prompt for image generation
                 parameters: { "sampleCount": 1 } // Ensure only one image is generated
             };
+            // API URL for Imagen 3.0
             const imageApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
 
+            // Fetch request to the image generation API
             const imageResponse = await fetch(imageApiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -70,6 +76,7 @@ const App = () => {
             const imageResult = await imageResponse.json();
 
             let imageUrl = '';
+            // Check if image generation was successful and extract the base64 image data
             if (imageResult.predictions && imageResult.predictions.length > 0 && imageResult.predictions[0].bytesBase64Encoded) {
                 imageUrl = `data:image/png;base64,${imageResult.predictions[0].bytesBase64Encoded}`;
                 setGeneratedImage(imageUrl); // Update state with the generated image URL
@@ -79,12 +86,15 @@ const App = () => {
 
             // --- Step 2: Generate Text Caption using Gemini 2.0 Flash ---
             // Construct a detailed prompt for the text generation based on the pillar name
+            // The prompt explicitly asks for only the caption text without introductory phrases.
             const textPrompt = `Write an engaging Instagram caption in English for an image representing "${pillar.name}". The caption should encourage interaction and include 5-7 relevant hashtags for an account named @EbayCoolFinds, focusing on online shopping, unique finds, and the joy of discovery. The tone should be enthusiastic and friendly. Provide only the caption text, without any introductory phrases or comments.`;
 
             const textChatHistory = [{ role: "user", parts: [{ text: textPrompt }] }];
             const textPayload = { contents: textChatHistory };
+            // API URL for Gemini 2.0 Flash
             const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
+            // Fetch request to the text generation API
             const textResponse = await fetch(textApiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -94,6 +104,7 @@ const App = () => {
             const textResult = await textResponse.json();
 
             let generatedCaption = '';
+            // Check if text generation was successful and extract the text
             if (textResult.candidates && textResult.candidates.length > 0 && textResult.candidates[0].content && textResult.candidates[0].content.parts && textResult.candidates[0].content.parts.length > 0) {
                 generatedCaption = textResult.candidates[0].content.parts[0].text;
                 setGeneratedText(generatedCaption); // Update state with the generated text
@@ -118,13 +129,14 @@ const App = () => {
 
         setTelegramStatus('Sending to Telegram...');
         // IMPORTANT: Replace this with your actual Cloudflare Worker URL
-        // Example: const workerUrl = 'https://your-telegram-worker.yourusername.workers.dev/';
+        // This URL will point to the Cloudflare Worker you will deploy separately.
         const workerUrl = 'YOUR_CLOUDFLARE_TELEGRAM_WORKER_URL_HERE'; // *** REPLACE THIS URL ***
 
         try {
             const response = await fetch(workerUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                // Send the base64 image data (without the "data:image/png;base64," prefix) and the caption
                 body: JSON.stringify({
                     image_base64: generatedImage.split(',')[1], // Extract base64 part
                     caption: generatedText
@@ -136,23 +148,27 @@ const App = () => {
             if (response.ok) {
                 setTelegramStatus('Content sent to Telegram successfully!');
             } else {
+                // Display error from the Worker if available, otherwise generic message
                 setTelegramStatus(`Failed to send to Telegram: ${result.error || 'Unknown error'}`);
                 console.error('Telegram Worker Error:', result);
             }
         } catch (err) {
+            // Catch network errors or issues with the Worker URL
             setTelegramStatus(`Error sending to Telegram: ${err.message}`);
             console.error('Network or Worker call error:', err);
         }
     }, [generatedImage, generatedText]); // Dependencies for useCallback
 
-    // Function to share content on other social media
+    // Function to share content on other social media using Web Share API
     const shareOnSocialMedia = useCallback(() => {
         if (!generatedText) {
             alert('Please generate content first to share.');
             return;
         }
 
-        // Attempt to use Web Share API for text
+        // Attempt to use Web Share API for sharing text.
+        // Direct sharing of base64 images is often not supported by Web Share API
+        // or by the target social media platforms without a public URL.
         if (navigator.share) {
             navigator.share({
                 title: 'EbayCoolFinds Post',
@@ -167,21 +183,20 @@ const App = () => {
                 alert('Failed to share content. You might need to copy text and download image manually for some platforms.');
             });
         } else {
-            // Fallback for browsers that don't support Web Share API
-            // Provide options to copy text or open generic share links
+            // Fallback for browsers that do not support Web Share API
             alert('Your browser does not support direct sharing. Please copy the text and download the image manually to share on social media.');
-            // Optionally, you could open specific share links like:
-            // window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(generatedText)}`);
-            // window.open(`https://www.facebook.com/sharer/sharer.php?quote=${encodeURIComponent(generatedText)}`);
+            // Optionally, you could provide links to open specific social media share dialogues
+            // e.g., window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(generatedText)}`);
         }
     }, [generatedText]); // Dependencies for useCallback
 
     return (
-        // Main container with Tailwind CSS for responsive design and styling
+        // Main container with Tailwind CSS for responsive design and overall styling
         <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 font-inter">
-            {/* Tailwind CSS for Inter font */}
+            {/* Link to Inter font from Google Fonts for consistent typography */}
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
             <style>
+                {/* Basic CSS to apply the Inter font to the body */}
                 {`
                 body {
                     font-family: 'Inter', sans-serif;
@@ -189,15 +204,16 @@ const App = () => {
                 `}
             </style>
 
-            {/* Content Generator Card */}
+            {/* Main content card with shadow and rounded corners */}
             <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl flex flex-col items-center">
-                {/* App Title */}
+                {/* Application Title */}
                 <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">Content Generator for @EbayCoolFinds</h1>
+                {/* Application Description */}
                 <p className="text-gray-600 text-center mb-8">
                     Select a content pillar or generate random content for an image and an Instagram caption.
                 </p>
 
-                {/* Pillar Selection Dropdown */}
+                {/* Dropdown for selecting content pillars */}
                 <div className="w-full mb-6">
                     <label htmlFor="pillar-select" className="block text-gray-700 text-sm font-semibold mb-2">
                         Select a Content Pillar:
@@ -217,6 +233,7 @@ const App = () => {
                                 </option>
                             ))}
                         </select>
+                        {/* Dropdown arrow icon */}
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                             <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
@@ -225,14 +242,14 @@ const App = () => {
                     </div>
                 </div>
 
-                {/* Generate Buttons */}
+                {/* Buttons for content generation (manual and random) */}
                 <div className="flex flex-col sm:flex-row w-full gap-4 mb-6">
                     <button
                         onClick={() => handleGenerateContent(false)} // Manual selection
                         className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${isLoading || !selectedPillar ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={isLoading || !selectedPillar}
                     >
-                        {isLoading && !selectedPillar ? ( // Only show loading if a pillar is selected
+                        {isLoading && !selectedPillar ? ( // Show loading spinner if a pillar is selected and loading
                             <div className="flex items-center justify-center">
                                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -249,7 +266,7 @@ const App = () => {
                         className={`flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={isLoading}
                     >
-                        {isLoading && selectedPillar === '' ? ( // Show loading if no pillar is selected (implying random)
+                        {isLoading && selectedPillar === '' ? ( // Show loading spinner if no pillar is selected (implying random)
                             <div className="flex items-center justify-center">
                                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -264,7 +281,7 @@ const App = () => {
                 </div>
 
 
-                {/* Error Message Display */}
+                {/* Error message display area */}
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mt-6 w-full" role="alert">
                         <strong className="font-bold">Error!</strong>
@@ -272,7 +289,7 @@ const App = () => {
                     </div>
                 )}
 
-                {/* Generated Content Display */}
+                {/* Display area for generated image and text */}
                 {(generatedImage || generatedText) && (
                     <div className="mt-8 p-6 bg-gray-50 border border-gray-200 rounded-xl w-full">
                         <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center">Generated Content:</h2>
@@ -291,7 +308,7 @@ const App = () => {
                                         src="Screenshot 2025-06-25 at 12.20.19 PM.png" // User's provided logo file
                                         alt="EbayCoolFinds Logo Profile"
                                         className="absolute bottom-2 right-2 w-16 h-16 object-contain rounded-full border-2 border-white shadow-lg"
-                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/64x64/cccccc/ffffff?text=Logo"; }} // Fallback
+                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/64x64/cccccc/ffffff?text=Logo"; }} // Fallback image if the actual logo isn't found
                                     />
                                 </div>
                                 <p className="text-sm text-gray-500 mt-2 text-center">
@@ -313,7 +330,7 @@ const App = () => {
                                 <div className="bg-white p-4 rounded-lg border border-gray-300 text-gray-800 whitespace-pre-wrap break-words">
                                     {generatedText}
                                 </div>
-                                {/* New Telegram Bot Button */}
+                                {/* Button to send content to Telegram Bot via a Cloudflare Worker */}
                                 <button
                                     onClick={sendToTelegram}
                                     className={`mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 ${!generatedImage || !generatedText ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -323,7 +340,7 @@ const App = () => {
                                 </button>
                                 {telegramStatus && <p className="text-sm text-center mt-2">{telegramStatus}</p>}
 
-                                {/* New Share Button */}
+                                {/* Button to share content on other social media platforms */}
                                 <button
                                     onClick={shareOnSocialMedia}
                                     className={`mt-4 w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-opacity-50 ${!generatedText ? 'opacity-50 cursor-not-allowed' : ''}`}
