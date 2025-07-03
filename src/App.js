@@ -128,9 +128,8 @@ const App = () => {
         }
 
         setTelegramStatus('Sending to Telegram...');
-        // IMPORTANTE: Reemplaza esto con la URL real de tu Cloudflare Worker
-        // Esta URL apuntará al Cloudflare Worker que desplegarás por separado.
-        const workerUrl = 'YOUR_CLOUDFLARE_TELEGRAM_WORKER_URL_HERE'; // *** REEMPLAZA ESTA URL ***
+        // ¡URL REAL DE TU CLOUDFLARE WORKER PARA TELEGRAM INSERTADA AQUÍ!
+        const workerUrl = 'https://instagram-ecf-telegram-bot.opulentoebay.workers.dev'; 
 
         try {
             const response = await fetch(workerUrl, {
