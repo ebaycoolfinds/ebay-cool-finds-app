@@ -1,35 +1,34 @@
 import React, { useState, useCallback, useMemo } from 'react';
 
-// Componente principal de la aplicación
+// Main App component
 const App = () => {
-    // Variables de estado para gestionar los datos y la interfaz de usuario de la aplicación
-    const [selectedPillar, setSelectedPillar] = useState(''); // Almacena el pilar de contenido seleccionado actualmente
-    const [generatedImage, setGeneratedImage] = useState(''); // Almacena la URL de la imagen generada
-    const [generatedText, setGeneratedText] = useState(''); // Almacena el pie de foto de Instagram generado
-    const [isLoading, setIsLoading] = useState(false); // Indica si el contenido se está generando actualmente
-    const [error, setError] = useState(''); // Almacena cualquier mensaje de error
-    const [telegramStatus, setTelegramStatus] = useState(''); // Mensaje de estado para el envío a Telegram
+    // State variables for managing the application's data and UI
+    const [selectedPillar, setSelectedPillar] = useState(''); // Stores the currently selected content pillar
+    const [generatedImage, setGeneratedImage] = useState(''); // Stores the URL of the generated image
+    const [generatedText, setGeneratedText] = useState(''); // Stores the generated Instagram caption
+    const [isLoading, setIsLoading] = useState(false); // Indicates if content is currently being generated
+    const [error, setError] = useState(''); // Stores any error messages
+    const [telegramStatus, setTelegramStatus] = useState(''); // Status message for Telegram send
 
-    // Define los pilares de contenido con sus IDs, nombres de visualización y prompts base para la generación de imágenes
-    // Estos son los nuevos pilares y prompts enfocados en la cultura eBay y la relevancia del contenido.
+    // Define the content pillars with their IDs, display names, and base prompts for image generation
+    // All names and prompts are now strictly in English.
     const contentPillars = useMemo(() => [
-        { id: 'freshly_arrived_treasure', name: 'El Tesoro Recién Llegado', prompt: 'A close-up, overhead shot of hands carefully opening a branded, slightly worn cardboard shipping box (with subtle "eBay" or generic shipping labels), revealing a unique, identifiable vintage item (e.g., a retro camera, a classic vinyl record, a quirky ceramic vase) wrapped in protective material. Focus on the item\'s first reveal and the texture of the packaging. Soft, natural light. Realistic photo.' },
-        { id: 'popular_collectibles', name: 'Coleccionables Populares', prompt: 'A clean, well-lit studio shot of a single, highly recognizable and popular collectible item (e.g., a vintage Star Wars action figure, a rare baseball card in a protective sleeve, a classic comic book cover, a limited edition sneaker). The item should be the clear focus, showcasing its iconic details and broad appeal. Neutral background. Realistic photo.' },
-        { id: 'vintage_charm', name: 'El Estilo "Pre-Loved"', prompt: 'A stylish flat lay featuring a high-quality, pre-owned fashion item (e.g., a vintage leather jacket, a unique designer handbag, a classic pair of sneakers) artfully arranged on a clean, minimalist background, perhaps with a subtle tag indicating "pre-loved." Focus on the item\'s texture, quality, and timeless appeal. Bright, airy lighting. Realistic photo.' },
-        { id: 'the_deal_hunt', name: 'La Caza de Ofertas Digital', prompt: 'A close-up of a hand holding a smartphone or tablet, displaying an active eBay listing or a "Sold" item with a significantly discounted price. The background is slightly blurred, suggesting a cozy home environment. Focus on the digital interface and the excitement of a successful online find. Soft, warm lighting. Realistic photo.' },
-        { id: 'stylish_home_decor', name: 'Decoración del Hogar con Estilo', prompt: 'A well-composed shot of a stylish and identifiable home decor item (e.g., a decorative ceramic vase with fresh flowers, a plush throw pillow with an interesting pattern, a framed abstract art piece, a distinctive table lamp) prominently displayed in a modern, inviting living space. Focus on how the item adds character and personality to the room. Natural, inviting light. Realistic photo.' },
-        { id: 'the_sellers_corner', name: 'El Rincón del Vendedor', prompt: 'An overhead shot of hands carefully photographing or packaging an item for sale on eBay. The item (e.g., a vintage camera, a collectible toy, a piece of clothing) is well-lit and ready for its new home. Subtle hints of packaging materials or a clean workspace. Realistic photo.' },
-        { id: 'retro_tech_gaming', name: 'Tecnología y Gaming Retro', prompt: 'A sleek, modern desk setup featuring a prominent, functional and iconic retro tech item or gaming console (e.g., an original Nintendo Entertainment System with its grey controller, a vintage Sony Walkman with headphones, a classic Macintosh computer, an old arcade joystick). Focus on the nostalgic appeal and the item\'s recognizable design. Clean, focused lighting. Realistic photo.'对了，我还有一个问题想问一下，就是我用这个模型生成了一个图片，然后我把这个图片作为输入，再用这个模型生成一个图片，这样可行吗？' },
-        { id: 'era_icons', name: 'Iconos de Época', prompt: 'A close-up of a well-known, iconic item from a specific past decade (e.g., a classic 80s boombox, a vintage rotary telephone, a retro lava lamp, a classic Polaroid camera) placed in a contemporary setting, with a subtle play of light and shadow emphasizing its nostalgic appeal. Focus on the item\'s design and its cultural significance. Moody, artistic lighting. Realistic photo.' },
-        // --- NUEVOS PILARES ---
-        { id: 'trendy_items_ebay', name: 'Artículos Trendy en eBay', prompt: 'A clean, well-lit studio shot of a single, highly fashionable or trending item currently popular on eBay (e.g., a specific style of sneaker, a popular tech gadget, a trending fashion accessory, a modern collectible). The item should be the clear focus, showcasing its contemporary appeal. Neutral background. Realistic photo.' },
-        { id: 'most_sought_after', name: 'Los Más Buscados', prompt: 'A dramatic close-up of a highly coveted and hard-to-find item on eBay (e.g., a rare vintage video game, a limited edition designer toy, a first-edition book, a specific model of collectible car). The item should be presented as a prized possession, with subtle emphasis on its rarity and desirability. Elegant, focused lighting. Realistic photo.' },
+        { id: 'freshly_arrived_treasure', name: 'The Freshly Arrived Treasure', prompt: 'A close-up, overhead shot of hands carefully opening a branded, slightly worn cardboard shipping box (with subtle "eBay" or generic shipping labels), revealing a unique, identifiable vintage item (e.g., a retro camera, a classic vinyl record, a quirky ceramic vase) wrapped in protective material. Focus on the item\'s first reveal and the texture of the packaging. Soft, natural light. Realistic photo.' },
+        { id: 'popular_collectibles', name: 'Popular Collectibles', prompt: 'A clean, well-lit studio shot of a single, highly recognizable and popular collectible item (e.g., a vintage Star Wars action figure, a rare baseball card in a protective sleeve, a classic comic book cover, a limited edition sneaker). The item should be the clear focus, showcasing its iconic details and broad appeal. Neutral background. Realistic photo.' },
+        { id: 'vintage_charm', name: 'The Pre-Loved Style', prompt: 'A stylish flat lay featuring a high-quality, pre-owned fashion item (e.g., a vintage leather jacket, a unique designer handbag, a classic pair of sneakers) artfully arranged on a clean, minimalist background, perhaps with a subtle tag indicating "pre-loved." Focus on the item\'s texture, quality, and timeless appeal. Bright, airy lighting. Realistic photo.' },
+        { id: 'the_deal_hunt', name: 'The Digital Deal Hunt', prompt: 'A close-up of a hand holding a smartphone or tablet, displaying an active eBay listing or a "Sold" item with a significantly discounted price. The background is slightly blurred, suggesting a cozy home environment. Focus on the digital interface and the excitement of a successful online find. Soft, warm lighting. Realistic photo.' },
+        { id: 'stylish_home_decor', name: 'Stylish Home Finds', prompt: 'A well-composed shot of a stylish and identifiable home decor item (e.g., a decorative ceramic vase with fresh flowers, a plush throw pillow with an interesting pattern, a framed abstract art piece, a distinctive table lamp) prominently displayed in a modern, inviting living space. Focus on how the item adds character and personality to the room. Natural, inviting light. Realistic photo.' },
+        { id: 'the_sellers_corner', name: 'The Seller\'s Corner', prompt: 'An overhead shot of hands carefully photographing or packaging an item for sale on eBay. The item (e.g., a vintage camera, a collectible toy, a piece of clothing) is well-lit and ready for its new home. Subtle hints of packaging materials or a clean workspace. Realistic photo.' },
+        { id: 'retro_tech_gaming', name: 'Iconic Retro Tech & Gaming', prompt: 'A sleek, modern desk setup featuring a prominent, functional and iconic retro tech item or gaming console (e.g., an original Nintendo Entertainment System with its grey controller, a vintage Sony Walkman with headphones, a classic Macintosh computer, an old arcade joystick). Focus on the nostalgic appeal and the item\'s recognizable design. Clean, focused lighting. Realistic photo.' },
+        { id: 'era_icons', name: 'Nostalgic Era Icons', prompt: 'A close-up of a well-known, iconic item from a specific past decade (e.g., a classic 80s boombox, a vintage rotary telephone, a retro lava lamp, a classic Polaroid camera) placed in a contemporary setting, with a subtle play of light and shadow emphasizing its nostalgic appeal. Focus on the item\'s design and its cultural significance. Moody, artistic lighting. Realistic photo.' },
+        { id: 'trendy_items_ebay', name: 'Trendy Items on eBay', prompt: 'A clean, well-lit studio shot of a single, highly fashionable or trending item currently popular on eBay (e.g., a specific style of sneaker, a popular tech gadget, a trending fashion accessory, a modern collectible). The item should be the clear focus, showcasing its contemporary appeal. Neutral background. Realistic photo.' },
+        { id: 'most_sought_after', name: 'Most Sought-After Finds', prompt: 'A dramatic close-up of a highly coveted and hard-to-find item on eBay (e.g., a rare vintage video game, a limited edition designer toy, a first-edition book, a specific model of collectible car). The item should be presented as a prized possession, with subtle emphasis on its rarity and desirability. Elegant, focused lighting. Realistic photo.' },
     ], []);
     
-    // La clave API se lee ahora de la variable global 'window' inyectada en index.html
+    // The API key is now read from the global 'window' variable injected in index.html
     const apiKey = window.REACT_APP_GEMINI_API_KEY;
 
-    // Función para manejar la generación de contenido (imagen y texto)
+    // Function to handle content generation (image and text)
     const handleGenerateContent = useCallback(async (isRandom = false) => {
         setError('');
         setGeneratedImage('');
@@ -56,7 +55,7 @@ const App = () => {
                 throw new Error('Content pillar not found.');
             }
 
-            // --- Paso 1: Generar Imagen usando Imagen 3.0 ---
+            // --- Step 1: Generate Image using Imagen 3.0 ---
             const imagePayload = {
                 instances: { prompt: pillar.prompt },
                 parameters: { "sampleCount": 1 }
@@ -79,8 +78,8 @@ const App = () => {
                 throw new Error('Failed to generate image. Please try again.');
             }
 
-            // --- Paso 2: Generar pie de foto de texto usando Gemini 2.0 Flash ---
-            // El prompt ahora pide el caption principal Y los hashtags separados por una nueva línea.
+            // --- Step 2: Generate Text Caption using Gemini 2.0 Flash ---
+            // The prompt now asks for the main caption AND hashtags separated by a new line.
             const textPrompt = `Write an engaging Instagram caption in English for an image representing "${pillar.name}". The caption should encourage interaction and include relevant emojis. After the main caption, on a new line, provide 5-7 relevant hashtags for an account named @EbayCoolFinds, focusing on online shopping, unique finds, and the joy of discovery. The tone should be enthusiastic and friendly. Provide only the caption text, without any introductory phrases or comments.`;
 
             const textChatHistory = [{ role: "user", parts: [{ text: textPrompt }] }];
@@ -111,7 +110,7 @@ const App = () => {
         }
     }, [selectedPillar, contentPillars, apiKey]);
 
-    // Función para enviar contenido al Bot de Telegram a través de un Cloudflare Worker
+    // Function to send content to Telegram Bot via a Cloudflare Worker
     const sendToTelegram = useCallback(async () => {
         if (!generatedImage || !generatedText) {
             setTelegramStatus('Please generate content first.');
@@ -127,7 +126,7 @@ const App = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     image_base64: generatedImage.split(',')[1],
-                    caption: generatedText // Enviamos el caption completo al Worker
+                    caption: generatedText // Send the full caption to the Worker
                 })
             });
 
@@ -145,7 +144,7 @@ const App = () => {
         }
     }, [generatedImage, generatedText]);
 
-    // Función para compartir contenido en otras redes sociales usando la Web Share API
+    // Function to share content on other social media using the Web Share API
     const shareOnSocialMedia = useCallback(() => {
         if (!generatedText) {
             alert('Please generate content first to share.');
@@ -301,7 +300,10 @@ const App = () => {
                                     disabled={!generatedText}
                                 >
                                     Share on Social Media
-                                </a>
+                                </button>
+                                <p className="text-sm text-gray-500 mt-2 text-center">
+                                    *For sharing with image on some platforms, you may need to download the image and upload it to a public hosting service first.
+                                </p>
                             </div>
                         )}
                     </div>
