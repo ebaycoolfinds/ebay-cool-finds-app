@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react'; // Asegúrate de que useMemo esté importado aquí
+import React, { useState, useCallback, useMemo } from 'react';
 
 // Componente principal de la aplicación
 const App = () => {
@@ -11,36 +11,33 @@ const App = () => {
     const [telegramStatus, setTelegramStatus] = useState(''); // Mensaje de estado para el envío a Telegram
 
     // Define los pilares de contenido con sus IDs, nombres de visualización y prompts base para la generación de imágenes
-    // Este array se envuelve en useMemo para evitar que se recree en cada renderizado,
-    // lo que causaba el error de ESLint/build en Cloudflare Pages.
+    // Estos son los nuevos pilares y prompts enfocados en la relevancia del contenido.
     const contentPillars = useMemo(() => [
-        { id: 'discovery', name: 'The Thrill of Discovery', prompt: 'A person experiencing surprise and wonder, looking at something amazing just out of frame, with a bright, curious expression. Focus on the emotion of discovery and a sense of awe. Realistic photo.' },
-        { id: 'lifestyle', name: 'The Online Treasure Hunter Lifestyle', prompt: 'A person with a thoughtful and satisfied expression, holding a unique, non-descript vintage item. The setting suggests a cozy, curated space, like a home office or a reading nook. Focus on the lifestyle and joy of finding unique items. Realistic photo.' },
-        { id: 'community', name: 'The Smart Shopper Community', prompt: 'Two or three diverse people happily interacting around a tablet or smartphone, sharing a moment of excitement over an online find. They are smiling and engaged. Focus on connection and shared joy. Realistic photo.' },
-        { id: 'inspiration', name: 'Inspiration and Creativity', prompt: 'Hands arranging abstract, colorful elements or non-descript unique objects in a creative way on a clean surface, suggesting new ideas and possibilities for home decor or hobbies. Focus on creativity and arrangement. Realistic photo.' },
-        { id: 'transformation', name: 'The Transformation Potential', prompt: 'A split image or a subtle transition showing a dull, uninspired space on one side and the same space looking vibrant and personalized on the other, implying a "cool find" made the difference. Focus on transformation and aesthetic improvement. Realistic photo.' },
-        { id: 'gifting', name: 'The Joy of Gifting', prompt: 'Hands exchanging a beautifully wrapped, non-descript gift package, with both people smiling warmly. Focus on the happiness of giving and receiving a special item. Realistic photo.' },
-        { id: 'aha_moment', name: 'The "Aha!" Moment', prompt: 'A person with a sudden look of inspiration, a lightbulb moment, while browsing on a tablet or computer. Focus on the spark of an idea or solution found online. Realistic photo.' },
-        { id: 'sustainable_finds', name: 'Sustainable Finds', prompt: 'Hands carefully examining a pre-loved, unique item, with a soft, appreciative touch. The background suggests a conscious, eco-friendly lifestyle. Focus on sustainability and finding new life for items. Realistic photo.' },
-    ], []); // El array vacío [] como dependencia asegura que este array se memorice una vez.
+        { id: 'unboxing_thrill', name: 'La Emoción del Unboxing', prompt: 'A close-up, overhead shot of hands carefully opening a rustic, slightly worn cardboard box, revealing the corner of a unique, intriguing vintage item wrapped in tissue paper. Focus on the anticipation and the first glimpse of the discovery. Soft, natural lighting. Realistic photo.' },
+        { id: 'curated_collections', name: 'Colecciones Curadas', prompt: 'An aesthetically pleasing flat lay of various unique, vintage, and quirky items (e.g., an old camera, a peculiar teacup, a retro clock, a small antique book) arranged artfully on a wooden table or a minimalist shelf. Focus on the texture and details of the collection. Soft, diffused lighting. Realistic photo.' },
+        { id: 'before_after_transformation', name: 'Antes y Después: La Transformación', prompt: 'A split image showing a plain, uninspired corner of a room on one side, and the exact same corner on the other side, transformed and vibrant with the addition of a unique, eye-catching vintage furniture piece or decor item. Focus on the visual impact of the "find." Realistic photo.' },
+        { id: 'story_behind_find', name: 'La Historia Detrás del Hallazgo', prompt: 'A close-up shot of a unique, antique item (e.g., an old compass, a vintage map, a weathered journal) resting on a textured surface, with subtle hints of its past like faded handwriting or a worn patina. Focus on the item\'s character and implied history. Soft, directional lighting. Realistic photo.' },
+        { id: 'unexpected_gems', name: 'Gemas Inesperadas', prompt: 'An unusual, quirky, or surprisingly beautiful object (e.g., a vintage scientific instrument, an eccentric sculpture, a rare collectible toy) placed unexpectedly in a mundane setting, creating a sense of delightful discovery. Focus on the item\'s unique form and the contrast. Realistic photo.' },
+        { id: 'gifting_joy', name: 'La Alegría de Regalar', prompt: 'A beautifully wrapped, unique gift package with a distinctive vintage or quirky item peeking out, being presented to hands reaching to receive it. Focus on the thoughtful presentation and the anticipation of a special, unexpected gift. Soft, warm lighting. Realistic photo.' },
+        { id: 'crafty_transformation', name: 'La Transformación Creativa (DIY)', prompt: 'A close-up of hands actively engaged in a creative process, repurposing a unique vintage item (e.g., painting an old wooden crate, adding plants to a quirky ceramic pot, transforming a retro lamp). Focus on the hands and the item in mid-transformation, showing creativity and upcycling. Bright, well-lit workspace. Realistic photo.' },
+        { id: 'vintage_vibes', name: 'Vibras Vintage', prompt: 'A stylishly composed scene featuring a prominent, iconic vintage item (e.g., a retro record player, a classic typewriter, a mid-century modern lamp) in a contemporary setting, creating a nostalgic yet chic aesthetic. Focus on the item\'s design and its timeless appeal. Warm, inviting lighting. Realistic photo.' },
+    ], []);
     
     // La clave API se lee ahora de la variable global 'window' inyectada en index.html
     const apiKey = window.REACT_APP_GEMINI_API_KEY;
 
     // Función para manejar la generación de contenido (imagen y texto)
-    // El parámetro isRandom determina si se debe seleccionar un pilar aleatorio.
     const handleGenerateContent = useCallback(async (isRandom = false) => {
-        setError(''); // Limpia errores anteriores
-        setGeneratedImage(''); // Limpia imagen anterior
-        setGeneratedText(''); // Limpia texto anterior
-        setTelegramStatus(''); // Limpia estado anterior de Telegram
+        setError('');
+        setGeneratedImage('');
+        setGeneratedText('');
+        setTelegramStatus('');
 
         let pillarToGenerate = selectedPillar;
         if (isRandom) {
-            // Selecciona un pilar aleatorio si se hizo clic en el botón aleatorio
             const randomIndex = Math.floor(Math.random() * contentPillars.length);
             pillarToGenerate = contentPillars[randomIndex].id;
-            setSelectedPillar(pillarToGenerate); // Actualiza el menú desplegable para mostrar el pilar aleatorio seleccionado
+            setSelectedPillar(pillarToGenerate);
         }
 
         if (!pillarToGenerate) {
@@ -48,25 +45,21 @@ const App = () => {
             return;
         }
 
-        setIsLoading(true); // Establece el estado de carga a verdadero
+        setIsLoading(true);
 
         try {
-            // Encuentra los datos del pilar seleccionado
             const pillar = contentPillars.find(p => p.id === pillarToGenerate);
             if (!pillar) {
                 throw new Error('Content pillar not found.');
             }
 
             // --- Paso 1: Generar Imagen usando Imagen 3.0 ---
-            // Payload para la llamada a la API de generación de imágenes
             const imagePayload = {
-                instances: { prompt: pillar.prompt }, // Usa el prompt del pilar para la generación de imágenes
-                parameters: { "sampleCount": 1 } // Asegura que solo se genere una imagen
+                instances: { prompt: pillar.prompt },
+                parameters: { "sampleCount": 1 }
             };
-            // URL de la API para Imagen 3.0
             const imageApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
 
-            // Solicitud fetch a la API de generación de imágenes
             const imageResponse = await fetch(imageApiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -76,25 +69,21 @@ const App = () => {
             const imageResult = await imageResponse.json();
 
             let imageUrl = '';
-            // Verifica si la generación de imágenes fue exitosa y extrae los datos de la imagen en base64
             if (imageResult.predictions && imageResult.predictions.length > 0 && imageResult.predictions[0].bytesBase64Encoded) {
                 imageUrl = `data:image/png;base64,${imageResult.predictions[0].bytesBase64Encoded}`;
-                setGeneratedImage(imageUrl); // Actualiza el estado con la URL de la imagen generada
+                setGeneratedImage(imageUrl);
             } else {
                 throw new Error('Failed to generate image. Please try again.');
             }
 
             // --- Paso 2: Generar pie de foto de texto usando Gemini 2.0 Flash ---
-            // Construye un prompt detallado para la generación de texto basado en el nombre del pilar
-            // El prompt pide explícitamente solo el texto del pie de foto sin frases introductorias.
-            const textPrompt = `Write an engaging Instagram caption in English for an image representing "${pillar.name}". The caption should encourage interaction and include 5-7 relevant hashtags for an account named @EbayCoolFinds, focusing on online shopping, unique finds, and the joy of discovery. The tone should be enthusiastic and friendly. Provide only the caption text, without any introductory phrases or comments.`;
+            // El prompt ahora pide el caption principal Y los hashtags separados por una nueva línea.
+            const textPrompt = `Write an engaging Instagram caption in English for an image representing "${pillar.name}". The caption should encourage interaction and include relevant emojis. After the main caption, on a new line, provide 5-7 relevant hashtags for an account named @EbayCoolFinds, focusing on online shopping, unique finds, and the joy of discovery. The tone should be enthusiastic and friendly. Provide only the caption text, without any introductory phrases or comments.`;
 
             const textChatHistory = [{ role: "user", parts: [{ text: textPrompt }] }];
             const textPayload = { contents: textChatHistory };
-            // URL de la API para Gemini 2.0 Flash
             const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
-            // Solicitud fetch a la API de generación de texto
             const textResponse = await fetch(textApiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -104,10 +93,9 @@ const App = () => {
             const textResult = await textResponse.json();
 
             let generatedCaption = '';
-            // Verifica si la generación de texto fue exitosa y extrae el texto
             if (textResult.candidates && textResult.candidates.length > 0 && textResult.candidates[0].content && textResult.candidates[0].content.parts && textResult.candidates[0].content.parts.length > 0) {
                 generatedCaption = textResult.candidates[0].content.parts[0].text;
-                setGeneratedText(generatedCaption); // Actualiza el estado con el texto generado
+                setGeneratedText(generatedCaption);
             } else {
                 throw new Error('Failed to generate text. Please try again.');
             }
@@ -116,9 +104,9 @@ const App = () => {
             console.error("Error generating content:", err);
             setError(`Error: ${err.message || 'An unexpected error occurred.'}`);
         } finally {
-            setIsLoading(false); // Restablece el estado de carga
+            setIsLoading(false);
         }
-    }, [selectedPillar, contentPillars, apiKey]); // Dependencias para useCallback
+    }, [selectedPillar, contentPillars, apiKey]);
 
     // Función para enviar contenido al Bot de Telegram a través de un Cloudflare Worker
     const sendToTelegram = useCallback(async () => {
@@ -128,17 +116,15 @@ const App = () => {
         }
 
         setTelegramStatus('Sending to Telegram...');
-        // ¡URL REAL DE TU CLOUDFLARE WORKER PARA TELEGRAM INSERTADA AQUÍ!
         const workerUrl = 'https://instagram-ecf-telegram-bot.opulentoebay.workers.dev'; 
 
         try {
             const response = await fetch(workerUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // Envía los datos de la imagen en base64 (sin el prefijo "data:image/png;base64,") y el pie de foto
                 body: JSON.stringify({
-                    image_base64: generatedImage.split(',')[1], // Extrae la parte base64
-                    caption: generatedText
+                    image_base64: generatedImage.split(',')[1],
+                    caption: generatedText // Enviamos el caption completo al Worker
                 })
             });
 
@@ -147,16 +133,14 @@ const App = () => {
             if (response.ok) {
                 setTelegramStatus('Content sent to Telegram successfully!');
             } else {
-                // Muestra el error del Worker si está disponible, de lo contrario un mensaje genérico
                 setTelegramStatus(`Failed to send to Telegram: ${result.error || 'Unknown error'}`);
                 console.error('Telegram Worker Error:', result);
             }
         } catch (err) {
-            // Captura errores de red o problemas con la URL del Worker
             setTelegramStatus(`Error sending to Telegram: ${err.message}`);
             console.error('Network or Worker call error:', err);
         }
-    }, [generatedImage, generatedText]); // Dependencias para useCallback
+    }, [generatedImage, generatedText]);
 
     // Función para compartir contenido en otras redes sociales usando la Web Share API
     const shareOnSocialMedia = useCallback(() => {
@@ -165,16 +149,10 @@ const App = () => {
             return;
         }
 
-        // Intenta usar la Web Share API para compartir texto.
-        // La compartición directa de imágenes en base64 a menudo no es compatible con la Web Share API
-        // o con las plataformas de redes sociales de destino sin una URL pública.
         if (navigator.share) {
             navigator.share({
                 title: 'EbayCoolFinds Post',
                 text: generatedText,
-                // Los archivos (imágenes) son complicados con la Web Share API y base64.
-                // Para compartir imágenes directamente, el usuario necesitaría descargar y subir.
-                // O si la imagen estuviera alojada públicamente, podríamos proporcionar su URL aquí.
             }).then(() => {
                 console.log('Content shared successfully');
             }).catch((error) => {
@@ -182,29 +160,18 @@ const App = () => {
                 alert('Failed to share content. You might need to copy text and download image manually for some platforms.');
             });
         } else {
-            // Fallback para navegadores que no son compatibles con la Web Share API
             alert('Your browser does not support direct sharing. Please copy the text and download the image manually to share on social media.');
-            // Opcionalmente, podrías proporcionar enlaces para abrir diálogos de compartir de redes sociales específicas
-            // ej., window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(generatedText)}`);
         }
-    }, [generatedText]); // Dependencias para useCallback
+    }, [generatedText]);
 
     return (
-        // Contenedor principal con Tailwind CSS para diseño responsivo y estilo general
         <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 font-inter">
-            {/* NO NECESITAS LAS ETIQUETAS <link> y <style> AQUÍ. ESTÁN EN PUBLIC/INDEX.HTML AHORA. */}
-            {/* El Tailwind CSS CDN y la fuente Inter se cargan en public/index.html */}
-
-            {/* Tarjeta de contenido principal con sombra y esquinas redondeadas */}
             <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl flex flex-col items-center">
-                {/* Título de la aplicación */}
                 <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">Content Generator for @EbayCoolFinds</h1>
-                {/* Descripción de la aplicación */}
                 <p className="text-gray-600 text-center mb-8">
                     Select a content pillar or generate random content for an image and an Instagram caption.
                 </p>
 
-                {/* Menú desplegable para seleccionar pilares de contenido */}
                 <div className="w-full mb-6">
                     <label htmlFor="pillar-select" className="block text-gray-700 text-sm font-semibold mb-2">
                         Select a Content Pillar:
@@ -224,7 +191,6 @@ const App = () => {
                                 </option>
                             ))}
                         </select>
-                        {/* Icono de flecha del menú desplegable */}
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                             <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
@@ -233,14 +199,13 @@ const App = () => {
                     </div>
                 </div>
 
-                {/* Botones para la generación de contenido (manual y aleatorio) */}
                 <div className="flex flex-col sm:flex-row w-full gap-4 mb-6">
                     <button
-                        onClick={() => handleGenerateContent(false)} // Selección manual
+                        onClick={() => handleGenerateContent(false)}
                         className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 ${isLoading || !selectedPillar ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={isLoading || !selectedPillar}
                     >
-                        {isLoading && !selectedPillar ? ( // Muestra el spinner de carga si se selecciona un pilar y está cargando
+                        {isLoading && !selectedPillar ? (
                             <div className="flex items-center justify-center">
                                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -253,11 +218,11 @@ const App = () => {
                         )}
                     </button>
                     <button
-                        onClick={() => handleGenerateContent(true)} // Generación aleatoria
+                        onClick={() => handleGenerateContent(true)}
                         className={`flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                         disabled={isLoading}
                     >
-                        {isLoading && selectedPillar === '' ? ( // Muestra el spinner de carga si no se selecciona ningún pilar (lo que implica aleatorio)
+                        {isLoading && selectedPillar === '' ? (
                             <div className="flex items-center justify-center">
                                 <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -272,7 +237,6 @@ const App = () => {
                 </div>
 
 
-                {/* Área de visualización de mensajes de error */}
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mt-6 w-full" role="alert">
                         <strong className="font-bold">Error!</strong>
@@ -280,7 +244,6 @@ const App = () => {
                     </div>
                 )}
 
-                {/* Área de visualización de contenido generado */}
                 {(generatedImage || generatedText) && (
                     <div className="mt-8 p-6 bg-gray-50 border border-gray-200 rounded-xl w-full">
                         <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center">Generated Content:</h2>
@@ -289,17 +252,16 @@ const App = () => {
                             <div className="mb-6 flex flex-col items-center">
                                 <h3 className="text-xl font-medium text-gray-700 mb-2">Image:</h3>
                                 <div className="relative">
-                                    {/* Ruta de la imagen del logo - Asegúrate que el nombre del archivo sea exacto y esté en la carpeta public */}
                                     <img
                                         src={generatedImage}
                                         alt="Generated Instagram Content"
                                         className="w-full h-auto rounded-lg shadow-md max-w-md mx-auto block"
                                     />
                                     <img
-                                        src="/ebay-cool-finds-logo.png" // RUTA CORREGIDA DEL LOGO
+                                        src="/ebay-cool-finds-logo.png"
                                         alt="EbayCoolFinds Logo Profile"
                                         className="absolute bottom-2 right-2 w-16 h-16 object-contain rounded-full border-2 border-white shadow-lg"
-                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/64x64/cccccc/ffffff?text=Logo"; }} // Imagen de fallback si el logo real no se encuentra
+                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/64x64/cccccc/ffffff?text=Logo"; }}
                                     />
                                 </div>
                                 <p className="text-sm text-gray-500 mt-2 text-center">
@@ -321,7 +283,6 @@ const App = () => {
                                 <div className="bg-white p-4 rounded-lg border border-gray-300 text-gray-800 whitespace-pre-wrap break-words">
                                     {generatedText}
                                 </div>
-                                {/* Botón para enviar contenido al Bot de Telegram a través de un Cloudflare Worker */}
                                 <button
                                     onClick={sendToTelegram}
                                     className={`mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-50 ${!generatedImage || !generatedText ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -331,7 +292,6 @@ const App = () => {
                                 </button>
                                 {telegramStatus && <p className="text-sm text-center mt-2">{telegramStatus}</p>}
 
-                                {/* Botón para compartir contenido en otras plataformas de redes sociales */}
                                 <button
                                     onClick={shareOnSocialMedia}
                                     className={`mt-4 w-full bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-opacity-50 ${!generatedText ? 'opacity-50 cursor-not-allowed' : ''}`}
